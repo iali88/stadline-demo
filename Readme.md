@@ -13,7 +13,7 @@ http://localhost:8080/api/events/full/{dateStart}/{dateEnd}/{calendrier}/{id}
     -> permet d'avoir les events comme retourné par l'api Resamania
 
 http://localhost:8080/api/events/{dateStart}/{dateEnd}/{calendrier}/{id}
-    -> permet d'avoir les events dans format simplifié
+    -> permet d'avoir les events dans un format simplifié
 
 http://localhost:8080/api/activity/{id}
 
