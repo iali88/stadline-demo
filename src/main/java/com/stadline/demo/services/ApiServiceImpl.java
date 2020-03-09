@@ -1,6 +1,7 @@
 package com.stadline.demo.services;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,11 +25,15 @@ import com.stadline.demo.entity.HydraMemberEvent;
 import com.stadline.demo.entity.HydraMemberStudio;
 import com.stadline.demo.entity.ResponseApi;
 import com.stadline.demo.entity.SimpleEvent;
+import com.stadline.demo.entity.TraceAppel;
+import com.stadline.demo.repo.TraceAppelDAO;
 
 @Service
 public class ApiServiceImpl implements ApiService {
 
 	private RestTemplate restTemplate;
+	
+	private TraceAppelDAO traceAppelDAO;
 	
 	@Value("${api.url}")
 	private final String api_url;
@@ -47,13 +52,14 @@ public class ApiServiceImpl implements ApiService {
 	
 	private String token = null; 
 	
-	public ApiServiceImpl(RestTemplate restTemplate, @Value("${api.url}") String api_url, @Value("${client.id}") String client_id, @Value("${client.secret}") String client_secret, @Value("${authentification.type}") String authentification_type, @Value("${client.token}") String client_token) {
+	public ApiServiceImpl(RestTemplate restTemplate, @Value("${api.url}") String api_url, @Value("${client.id}") String client_id, @Value("${client.secret}") String client_secret, @Value("${authentification.type}") String authentification_type, @Value("${client.token}") String client_token, TraceAppelDAO traceAppelDao) {
 		this.api_url = api_url;
 		this.client_id = client_id;
 		this.client_secret = client_secret;
 		this.authentification_type = authentification_type;
 		this.client_token = client_token;
 		this.restTemplate = restTemplate;
+		this.traceAppelDAO = traceAppelDao;
 	}
 	
 	@Override
@@ -72,6 +78,8 @@ public class ApiServiceImpl implements ApiService {
 		
 		ResponseEntity<ResponseApi<HydraMemberActivity>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberActivity>>() {});
 		ResponseApi<HydraMemberActivity> responseApi = activityResponse.getBody();
+		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberActivity> getActivities()", LocalDateTime.now()));
 		
 		return responseApi.getHydraMember();
 	}
@@ -94,6 +102,8 @@ public class ApiServiceImpl implements ApiService {
 		ResponseEntity<ResponseApi<HydraMemberStudio>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberStudio>>() {});
 		ResponseApi<HydraMemberStudio> responseApi = activityResponse.getBody();
 		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberStudio> getStudios()", LocalDateTime.now()));
+		
 		return responseApi.getHydraMember();
 
 	}
@@ -115,6 +125,8 @@ public class ApiServiceImpl implements ApiService {
 		
 		ResponseEntity<ResponseApi<HydraMemberCoach>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberCoach>>() {});
 		ResponseApi<HydraMemberCoach> responseApi = activityResponse.getBody();
+		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberCoach> getCoaches()", LocalDateTime.now()));
 		
 		return responseApi.getHydraMember();
 
@@ -145,6 +157,8 @@ public class ApiServiceImpl implements ApiService {
 		
 		ResponseApi<HydraMemberEvent> responseApi = activityResponse.getBody();
 		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberEvent> getListEventsbyPeriod", LocalDateTime.now()));
+		
 		return responseApi.getHydraMember();
 
 	}
@@ -172,6 +186,8 @@ public class ApiServiceImpl implements ApiService {
 		ResponseEntity<ResponseApi<HydraMemberEvent>> activityResponse = restTemplate.exchange(uriFinal, HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});
 		
 		ResponseApi<HydraMemberEvent> responseApi = activityResponse.getBody();
+		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<SimpleEvent> getSimpleEventsListByPeriod", LocalDateTime.now()));
 		
 		List<HydraMemberEvent> events = responseApi.getHydraMember();
 		
@@ -212,6 +228,8 @@ public class ApiServiceImpl implements ApiService {
 		
 		HydraMemberActivity hydraMemberActivity = activityResponse.getBody();
 		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberActivity getActivityById(String id)", LocalDateTime.now()));
+		
 		return hydraMemberActivity;
 	
 	}
@@ -233,6 +251,8 @@ public class ApiServiceImpl implements ApiService {
 		ResponseEntity<HydraMemberStudio> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, HydraMemberStudio.class);
 		
 		HydraMemberStudio hydraMemberStudio = activityResponse.getBody();
+		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberStudio getStudioById(String id)", LocalDateTime.now()));
 		
 		return hydraMemberStudio;
 		
@@ -256,6 +276,8 @@ public class ApiServiceImpl implements ApiService {
 		
 		HydraMemberCoach hydraMemberCoach = activityResponse.getBody();
 		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberCoach getCoachById(String id)", LocalDateTime.now()));
+		
 		return hydraMemberCoach;
 		
 	}
@@ -274,6 +296,8 @@ public class ApiServiceImpl implements ApiService {
 		ResponseEntity<String> response = null;
 				
 		response = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, HttpEntity.EMPTY, String.class);
+		
+		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "String getToken()", LocalDateTime.now()));
 		
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode node;
