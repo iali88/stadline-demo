@@ -25,7 +25,7 @@ public class ApiAspect {
 	@Before("execution(* com.stadline.demo.services.*.*(..))")
 	public void checkAuthentification() {
 		
-		if(authParameter.getToken() == null) {
+		if(authParameter.getToken() == null || authParameter.isTokenExpired()) {
 			authParameter.getTokenFromApi();
 		}
 		

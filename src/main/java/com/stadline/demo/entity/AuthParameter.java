@@ -1,5 +1,8 @@
 package com.stadline.demo.entity;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -31,6 +34,10 @@ public class AuthParameter {
 	private final String client_token;
 
 	private String token = null;
+	
+	private String token_expires_in = null;
+	
+	private LocalDateTime tokenExpiryDate = null;
 
 	@Autowired
 	private RestTemplate restTemplate;
@@ -75,7 +82,12 @@ public class AuthParameter {
 
 			node = mapper.readTree(response.getBody());
 			token = node.path("access_token").asText();
-
+			token_expires_in = node.path("expires_in").asText();
+			
+			// gestion de la date d'expiration
+			this.tokenExpiryDate = LocalDateTime.now().plus(Duration.parse("PT" + token_expires_in + "S"));
+			
+			
 		} catch (JsonMappingException e) {
 			e.printStackTrace();
 		} catch (JsonProcessingException e) {
@@ -108,6 +120,10 @@ public class AuthParameter {
 
 	public String getToken() {
 		return token;
+	}
+	
+	public boolean isTokenExpired() {
+		return this.tokenExpiryDate.isBefore(LocalDateTime.now());
 	}
 	
 	
