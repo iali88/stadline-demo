@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -33,21 +32,6 @@ public class ApiServiceImpl implements ApiService {
 	private TraceAppelDAO traceAppelDAO;
 	
 	private AuthParameter authParameter;
-	
-	@Value("${api.url}")
-	private final String api_url;
-	
-	@Value("${client.id}")
-	private final String client_id; 
-	
-	@Value("${client.secret}")
-	private final String client_secret; 
-	
-	@Value("${authentification.type}")
-	private final String authentification_type; 
-	
-	@Value("${client.token}")
-	private final String client_token;
 		
 	private final String pathActivities = "/activities";
 	
@@ -57,14 +41,7 @@ public class ApiServiceImpl implements ApiService {
 	
 	private final String pathEvents = "/events";
 	
-	public ApiServiceImpl(RestTemplate restTemplate, @Value("${api.url}") String api_url, @Value("${client.id}") String client_id,
-			@Value("${client.secret}") String client_secret, @Value("${authentification.type}") String authentification_type,
-			@Value("${client.token}") String client_token, TraceAppelDAO traceAppelDao, AuthParameter authParameter) {
-		this.api_url = api_url;
-		this.client_id = client_id;
-		this.client_secret = client_secret;
-		this.authentification_type = authentification_type;
-		this.client_token = client_token;
+	public ApiServiceImpl(RestTemplate restTemplate, TraceAppelDAO traceAppelDao, AuthParameter authParameter) {
 		this.restTemplate = restTemplate;
 		this.traceAppelDAO = traceAppelDao;
 		this.authParameter = authParameter;
@@ -73,7 +50,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberActivity> getActivities() {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathActivities);	
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathActivities);	
 		ResponseApi<HydraMemberActivity> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberActivity>>() {});
 		
 		return responseApi.getHydraMember();
@@ -85,7 +62,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberStudio> getStudios() {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathStudios);
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathStudios);
 		ResponseApi<HydraMemberStudio> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberStudio>>() {});
 		
 		return responseApi.getHydraMember();
@@ -95,7 +72,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberCoach> getCoaches() {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathCoaches);
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathCoaches);
 		ResponseApi<HydraMemberCoach> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberCoach>>() {});
 		
 		return responseApi.getHydraMember();
@@ -106,12 +83,12 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberEvent> getListEventsbyPeriod(String dateStart, String dateEnd, String calendrier, String id) {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + pathEvents)
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url())
+				.path("/" + authParameter.getClient_token() + pathEvents)
 				.queryParam("startedAt", dateStart)
 				.queryParam("endedAt", dateEnd);
 		
-		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
+		String calendarParam = "&calendars[]=" + "/"+ authParameter.getClient_token() + "/" + calendrier + "/" + id ;
 		String uriFinal = uriBuilder.toUriString() + calendarParam;
 		
 		ResponseApi<HydraMemberEvent> responseApi = callApiForMultipleEntity(uriFinal, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});
@@ -124,12 +101,12 @@ public class ApiServiceImpl implements ApiService {
 	public List<SimpleEvent> getSimpleEventsListByPeriod(String dateStart, String dateEnd, String calendrier, String id) {
 		
 
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + pathEvents)
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url())
+				.path("/" + authParameter.getClient_token() + pathEvents)
 				.queryParam("startedAt", dateStart)
 				.queryParam("endedAt", dateEnd);
 		
-		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
+		String calendarParam = "&calendars[]=" + "/"+ authParameter.getClient_token() + "/" + calendrier + "/" + id ;
 		String uriFinal = uriBuilder.toUriString() + calendarParam;
 		
 		ResponseApi<HydraMemberEvent> responseApi = callApiForMultipleEntity(uriFinal, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});	
@@ -158,7 +135,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public HydraMemberActivity getActivityById(String id) {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathActivities + "/" + id);	
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathActivities + "/" + id);	
 		HydraMemberActivity hydraMemberActivity = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberActivity.class);
 		
 		return hydraMemberActivity;
@@ -168,7 +145,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public HydraMemberStudio getStudioById(String id) {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathStudios + "/" + id);	
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathStudios + "/" + id);	
 		HydraMemberStudio hydraMemberStudio = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberStudio.class);
 		
 		return hydraMemberStudio;
@@ -178,7 +155,7 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public HydraMemberCoach getCoachById(String id) {
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathCoaches + "/" + id);	
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(authParameter.getApi_url()).path("/" + authParameter.getClient_token() + pathCoaches + "/" + id);	
 		
 		HydraMemberCoach hydraMemberCoach = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberCoach.class);
 		
