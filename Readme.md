@@ -24,7 +24,7 @@ http://localhost:8080/api/studio/{id}
 http://localhost:8080/api/coach/{id}
 
 
-2. Une interface front a été implémentée, elle permet des voir les créneaux disponible à partir d'une plage de date.
+2. Une interface front a été implémentée, elle permet de voir les créneaux disponible à partir d'une plage de date.
    (http://localhost:8080/appli)
 
 3. L'application stocke dans une table en base de données les intérrogations du planning. Utilisation d'une base en mémoire : H2. 
