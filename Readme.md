@@ -1,6 +1,12 @@
 Test technique : Stadline 
 -----------------------------
 
+    Note : La branche "aop-implementation" contient : 
+    _ un refactoring de la classe ApiServiceImpl
+    _ une intégration d'AspectJ pour l'authentification 
+    _ la gestion de la date d'expiration du token. 
+
+
 1. Liste des "endpoints" de l'api (en local):
 
 http://localhost:8080/api/activities
