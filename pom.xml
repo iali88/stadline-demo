@@ -45,8 +45,8 @@
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-starter-aop</artifactId>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-aop</artifactId>
 		</dependency>
 		
 		<dependency>

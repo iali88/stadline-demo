@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stadline.demo.entity.AuthParameter;
 import com.stadline.demo.entity.HydraMemberActivity;
 import com.stadline.demo.entity.HydraMemberCoach;
 import com.stadline.demo.entity.HydraMemberEvent;
@@ -35,6 +36,8 @@ public class ApiServiceImpl implements ApiService {
 	
 	private TraceAppelDAO traceAppelDAO;
 	
+	private AuthParameter authParameter;
+	
 	@Value("${api.url}")
 	private final String api_url;
 	
@@ -49,10 +52,18 @@ public class ApiServiceImpl implements ApiService {
 	
 	@Value("${client.token}")
 	private final String client_token;
+		
+	private final String pathActivities = "/activities";
 	
-	private String token = null; 
+	private final String pathStudios = "/studios"; 
 	
-	public ApiServiceImpl(RestTemplate restTemplate, @Value("${api.url}") String api_url, @Value("${client.id}") String client_id, @Value("${client.secret}") String client_secret, @Value("${authentification.type}") String authentification_type, @Value("${client.token}") String client_token, TraceAppelDAO traceAppelDao) {
+	private final String pathCoaches = "/coaches";
+	
+	private final String pathEvents = "/events";
+	
+	public ApiServiceImpl(RestTemplate restTemplate, @Value("${api.url}") String api_url, @Value("${client.id}") String client_id,
+			@Value("${client.secret}") String client_secret, @Value("${authentification.type}") String authentification_type,
+			@Value("${client.token}") String client_token, TraceAppelDAO traceAppelDao, AuthParameter authParameter) {
 		this.api_url = api_url;
 		this.client_id = client_id;
 		this.client_secret = client_secret;
@@ -60,49 +71,26 @@ public class ApiServiceImpl implements ApiService {
 		this.client_token = client_token;
 		this.restTemplate = restTemplate;
 		this.traceAppelDAO = traceAppelDao;
+		this.authParameter = authParameter;
 	}
 	
 	@Override
 	public List<HydraMemberActivity> getActivities() {
 		
-		if(token == null) {
-			token = getToken();
-		}
-		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/activities");		
-		
-		ResponseEntity<ResponseApi<HydraMemberActivity>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberActivity>>() {});
-		ResponseApi<HydraMemberActivity> responseApi = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberActivity> getActivities()", LocalDateTime.now()));
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathActivities);	
+		ResponseApi<HydraMemberActivity> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberActivity>>() {});
 		
 		return responseApi.getHydraMember();
 	}
 
 	
+	
+
 	@Override
 	public List<HydraMemberStudio> getStudios() {
 		
-		if(token == null) {
-			token = getToken();
-		}
-		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/studios");		
-		
-		ResponseEntity<ResponseApi<HydraMemberStudio>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberStudio>>() {});
-		ResponseApi<HydraMemberStudio> responseApi = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberStudio> getStudios()", LocalDateTime.now()));
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathStudios);
+		ResponseApi<HydraMemberStudio> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberStudio>>() {});
 		
 		return responseApi.getHydraMember();
 
@@ -111,22 +99,8 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberCoach> getCoaches() {
 		
-		// récupération du token 
-		if(token == null) {
-			token = getToken();
-		}
-		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/coaches");		
-		
-		ResponseEntity<ResponseApi<HydraMemberCoach>> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberCoach>>() {});
-		ResponseApi<HydraMemberCoach> responseApi = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberCoach> getCoaches()", LocalDateTime.now()));
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathCoaches);
+		ResponseApi<HydraMemberCoach> responseApi = callApiForMultipleEntity(uriBuilder.toUriString(), new ParameterizedTypeReference<ResponseApi<HydraMemberCoach>>() {});
 		
 		return responseApi.getHydraMember();
 
@@ -136,28 +110,15 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<HydraMemberEvent> getListEventsbyPeriod(String dateStart, String dateEnd, String calendrier, String id) {
 		
-		if(token == null) {
-			token = getToken();
-		}
-		
-		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
-		
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/events")
+				.path("/" + client_token + pathEvents)
 				.queryParam("startedAt", dateStart)
 				.queryParam("endedAt", dateEnd);
 		
+		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
 		String uriFinal = uriBuilder.toUriString() + calendarParam;
 		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		ResponseEntity<ResponseApi<HydraMemberEvent>> activityResponse = restTemplate.exchange(uriFinal, HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});
-		
-		ResponseApi<HydraMemberEvent> responseApi = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<HydraMemberEvent> getListEventsbyPeriod", LocalDateTime.now()));
+		ResponseApi<HydraMemberEvent> responseApi = callApiForMultipleEntity(uriFinal, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});
 		
 		return responseApi.getHydraMember();
 
@@ -166,28 +127,16 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public List<SimpleEvent> getSimpleEventsListByPeriod(String dateStart, String dateEnd, String calendrier, String id) {
 		
-		if(token == null) {
-			token = getToken();
-		}
-		
-		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
-		
+
 		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/events")
+				.path("/" + client_token + pathEvents)
 				.queryParam("startedAt", dateStart)
 				.queryParam("endedAt", dateEnd);
 		
+		String calendarParam = "&calendars[]=" + "/"+ client_token + "/" + calendrier + "/" + id ;
 		String uriFinal = uriBuilder.toUriString() + calendarParam;
 		
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		ResponseEntity<ResponseApi<HydraMemberEvent>> activityResponse = restTemplate.exchange(uriFinal, HttpMethod.GET, entity, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});
-		
-		ResponseApi<HydraMemberEvent> responseApi = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "List<SimpleEvent> getSimpleEventsListByPeriod", LocalDateTime.now()));
+		ResponseApi<HydraMemberEvent> responseApi = callApiForMultipleEntity(uriFinal, new ParameterizedTypeReference<ResponseApi<HydraMemberEvent>>() {});	
 		
 		List<HydraMemberEvent> events = responseApi.getHydraMember();
 		
@@ -213,22 +162,8 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public HydraMemberActivity getActivityById(String id) {
 		
-		if(token == null) {
-			token = getToken();
-		}
-				
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/activities/" + id);
-				
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		ResponseEntity<HydraMemberActivity> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, HydraMemberActivity.class);
-		
-		HydraMemberActivity hydraMemberActivity = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberActivity getActivityById(String id)", LocalDateTime.now()));
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathActivities + "/" + id);	
+		HydraMemberActivity hydraMemberActivity = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberActivity.class);
 		
 		return hydraMemberActivity;
 	
@@ -237,22 +172,8 @@ public class ApiServiceImpl implements ApiService {
 	@Override
 	public HydraMemberStudio getStudioById(String id) {
 		
-		if(token == null) {
-			token = getToken();
-		}
-				
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/studios/" + id);
-				
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
-		
-		ResponseEntity<HydraMemberStudio> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, HydraMemberStudio.class);
-		
-		HydraMemberStudio hydraMemberStudio = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberStudio getStudioById(String id)", LocalDateTime.now()));
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathStudios + "/" + id);	
+		HydraMemberStudio hydraMemberStudio = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberStudio.class);
 		
 		return hydraMemberStudio;
 		
@@ -260,60 +181,46 @@ public class ApiServiceImpl implements ApiService {
 	
 	@Override
 	public HydraMemberCoach getCoachById(String id) {
-
-		if(token == null) {
-			token = getToken();
-		}
-				
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/coaches/" + id);
-				
-		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + token);
-		HttpEntity<String> entity = new HttpEntity<String>(headers);
 		
-		ResponseEntity<HydraMemberCoach> activityResponse = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, entity, HydraMemberCoach.class);
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url).path("/" + client_token + pathCoaches + "/" + id);	
 		
-		HydraMemberCoach hydraMemberCoach = activityResponse.getBody();
-		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "HydraMemberCoach getCoachById(String id)", LocalDateTime.now()));
+		HydraMemberCoach hydraMemberCoach = callApiForUniqueEntity(uriBuilder.toUriString(), HydraMemberCoach.class);
 		
 		return hydraMemberCoach;
 		
 	}
 	
-	
-	private String getToken() {
+	private <T> T callApiForUniqueEntity(String path, Class<T> classType) {
 		
-		String token = null;
+		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
 		
-		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(api_url)
-				.path("/" + client_token + "/oauth/v2/token")
-				.queryParam("client_id", client_id)
-				.queryParam("client_secret", client_secret)
-				.queryParam("grant_type", authentification_type);
-
-		ResponseEntity<String> response = null;
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + authParameter.getToken());
+		HttpEntity<String> entity = new HttpEntity<String>(headers);
+		
+		ResponseEntity<T> activityResponse = (ResponseEntity<T>) restTemplate.exchange(path, HttpMethod.GET, entity, classType);
 				
-		response = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.GET, HttpEntity.EMPTY, String.class);
+		traceAppelDAO.save(new TraceAppel(path, stackTrace[1].getMethodName(), LocalDateTime.now()));
 		
-		traceAppelDAO.save(new TraceAppel(uriBuilder.toUriString(), "String getToken()", LocalDateTime.now()));
-		
-		ObjectMapper mapper = new ObjectMapper();
-		JsonNode node;
-
-		try {
-			
-			node = mapper.readTree(response.getBody());
-			token = node.path("access_token").asText();
-		
-		} catch (JsonMappingException e) {
-			e.printStackTrace();
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-
-		return token;
+		return activityResponse.getBody();
 	}
+	
+	
+	private <T> ResponseApi<T> callApiForMultipleEntity(String path, ParameterizedTypeReference<ResponseApi<T>> parameterizedTypeReference) {
+		
+		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + authParameter.getToken());
+		HttpEntity<String> entity = new HttpEntity<String>(headers);
+		
+		ResponseEntity<ResponseApi<T>> activityResponse = restTemplate.exchange(path, HttpMethod.GET, entity, parameterizedTypeReference );
+		ResponseApi<T> responseApi = activityResponse.getBody();
+		
+		traceAppelDAO.save(new TraceAppel(path, stackTrace[1].getMethodName(), LocalDateTime.now()));
+		
+		return responseApi;
+	}
+	
 
 }
